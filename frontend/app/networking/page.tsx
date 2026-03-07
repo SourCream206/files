@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { apiUrl, apiFetch } from '../../lib/api';
 
 interface PersonSummary {
   name: string;
@@ -67,15 +68,17 @@ export default function NetworkingPage() {
     setResult(null);
     try {
       const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/networking/analyze`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ linkedinUrl, conversationNotes: notes || undefined }),
-      });
-      const data = await res.json();
+      const { res, data } = await apiFetch<AnalysisResponse & { message?: string }>(
+        apiUrl('/api/networking/analyze'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({ linkedinUrl, conversationNotes: notes || undefined }),
+        }
+      );
       if (!res.ok) throw new Error(data.message || 'Analysis failed');
       setResult(data);
     } catch (err: any) {
@@ -91,27 +94,29 @@ export default function NetworkingPage() {
     setFollowUpLoading(true);
     try {
       const token = typeof window !== 'undefined' ? window.localStorage.getItem('token') : null;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/generate-followup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({
-          type,
-          conversationNotes: followUpInput,
-          person: result
-            ? {
-                name: result.analysis.personSummary.name,
-                title: result.analysis.personSummary.title,
-                company: result.analysis.personSummary.company,
-              }
-            : undefined,
-        }),
-      });
-      const data = await res.json();
+      const { res, data } = await apiFetch<{ followUp?: string; message?: string }>(
+        apiUrl('/api/generate-followup'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({
+            type,
+            conversationNotes: followUpInput,
+            person: result
+              ? {
+                  name: result.analysis.personSummary.name,
+                  title: result.analysis.personSummary.title,
+                  company: result.analysis.personSummary.company,
+                }
+              : undefined,
+          }),
+        }
+      );
       if (!res.ok) throw new Error(data.message || 'Failed to generate follow-up');
-      setFollowUp(data.followUp);
+      setFollowUp(data.followUp ?? '');
     } catch (err: any) {
       setFollowUp(err.message || 'Failed to generate follow-up');
     } finally {

@@ -7,6 +7,7 @@ import userRoutes from './routes/user';
 import careerFairRoutes from './routes/careerFair';
 import networkingRoutes from './routes/networking';
 import followUpRoutes from './routes/followUp';
+import coldConnectRoutes from './routes/coldConnect';
 
 dotenv.config();
 
@@ -37,6 +38,7 @@ app.use('/api/user', userRoutes);
 app.use('/api/career-fair', careerFairRoutes);
 app.use('/api/networking', networkingRoutes);
 app.use('/api/generate-followup', followUpRoutes);
+app.use('/api/cold-connect', coldConnectRoutes);
 
 const port = process.env.PORT || 4000;
 

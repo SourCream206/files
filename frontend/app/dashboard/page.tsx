@@ -46,6 +46,13 @@ export default function DashboardPage() {
       href: '/networking',
       badge: 'LINKEDIN / 1:1',
     },
+    {
+      title: 'Cold Connect',
+      description:
+        'Based on your resume, get matched internships, people to connect with on LinkedIn, and nearby career fairs & networking events on a map.',
+      href: '/cold-connect',
+      badge: 'RESUME-BASED',
+    },
   ];
 
   return (
@@ -90,7 +97,7 @@ export default function DashboardPage() {
           </p>
         </section>
 
-        <section className="grid md:grid-cols-2 gap-6">
+        <section className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {cards.map((card) => (
             <Link
               key={card.href}

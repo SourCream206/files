@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { apiUrl, apiFetch } from '../../lib/api';
 
 interface Profile {
   name: string;
@@ -37,6 +38,7 @@ export default function ProfilePage() {
   const [targetCompanies, setTargetCompanies] = useState('');
   const [resumeText, setResumeText] = useState('');
   const [parseLoading, setParseLoading] = useState(false);
+  const [uploadLoading, setUploadLoading] = useState(false);
   const [parsed, setParsed] = useState<ParsedResume | null>(null);
 
   useEffect(() => {
@@ -50,7 +52,7 @@ export default function ProfilePage() {
 
     const loadProfile = async () => {
       try {
-        const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/user/profile`, {
+        const { res, data } = await apiFetch<Profile>(apiUrl('/api/user/profile'), {
           headers: { Authorization: `Bearer ${t}` },
         });
         if (!res.ok) {
@@ -60,7 +62,6 @@ export default function ProfilePage() {
           }
           throw new Error('Failed to load profile');
         }
-        const data: Profile = await res.json();
         setProfile(data);
         setSkills((data.skills || []).join(', '));
         setTargetIndustries((data.targetIndustries || []).join(', '));
@@ -91,7 +92,7 @@ export default function ProfilePage() {
         resumeText: resumeText || undefined,
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/user/profile`, {
+      const { res, data: updated } = await apiFetch<Profile>(apiUrl('/api/user/profile'), {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -100,7 +101,6 @@ export default function ProfilePage() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Failed to save profile');
-      const updated: Profile = await res.json();
       setProfile(updated);
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('user', JSON.stringify(updated));
@@ -118,21 +118,62 @@ export default function ProfilePage() {
     setParsed(null);
     setError(null);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/user/parse-resume`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ resumeText: resumeText.trim() }),
-      });
-      const data = await res.json();
+      const { res, data } = await apiFetch<ParsedResume & { message?: string }>(
+        apiUrl('/api/user/parse-resume'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ resumeText: resumeText.trim() }),
+        }
+      );
       if (!res.ok) throw new Error(data.message || 'Failed to parse resume');
       setParsed(data);
     } catch (err: any) {
       setError(err.message || 'Failed to parse resume');
     } finally {
       setParseLoading(false);
+    }
+  };
+
+  const handleUploadPdf = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !token) return;
+    if (file.type !== 'application/pdf') {
+      setError('Please select a PDF file.');
+      return;
+    }
+    setUploadLoading(true);
+    setParsed(null);
+    setError(null);
+    try {
+      const formData = new FormData();
+      formData.append('resume', file);
+      const { res, data } = await apiFetch<{
+        resumeText?: string;
+        skills?: string[];
+        suggestedIndustries?: string[];
+        suggestedInterests?: string[];
+        message?: string;
+      }>(apiUrl('/api/user/parse-resume-pdf'), {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: formData,
+      });
+      if (!res.ok) throw new Error(data.message || 'Failed to parse PDF');
+      setResumeText(data.resumeText || '');
+      setParsed({
+        skills: data.skills || [],
+        suggestedIndustries: data.suggestedIndustries || [],
+        suggestedInterests: data.suggestedInterests || [],
+      });
+    } catch (err: any) {
+      setError(err.message || 'Failed to parse PDF');
+    } finally {
+      setUploadLoading(false);
+      e.target.value = '';
     }
   };
 
@@ -273,8 +314,21 @@ export default function ProfilePage() {
           <section className="text-xs border border-white/10 rounded-xl p-5 bg-black/20">
             <h2 className="text-sm font-semibold mb-2">Resume</h2>
             <p className="text-white/40 mb-3">
-              Paste your resume or bio below. AI will extract skills and suggest target industries and interests.
+              Upload a PDF or paste your resume below. AI will extract skills and suggest target industries and interests.
             </p>
+            <div className="flex flex-wrap items-center gap-3 mb-3">
+              <label className="btn-secondary cursor-pointer inline-flex items-center gap-2">
+                <input
+                  type="file"
+                  accept="application/pdf"
+                  className="hidden"
+                  onChange={handleUploadPdf}
+                  disabled={uploadLoading}
+                />
+                {uploadLoading ? 'Parsing PDF...' : 'Upload PDF'}
+              </label>
+              <span className="text-white/30 text-[11px]">or paste text below</span>
+            </div>
             <textarea
               className="input-field h-32 resize-none mb-3"
               value={resumeText}
