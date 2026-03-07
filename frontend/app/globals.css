@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #0a0a0a;
+  --foreground: #ededed;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center gap-2 px-6 py-3 bg-[#00ff88] text-black text-xs font-bold tracking-widest hover:bg-white transition-all disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center gap-2 px-4 py-2 border border-white/20 text-white/60 text-xs tracking-widest hover:border-white/40 hover:text-white transition-all;
+  }
+
+  .input-field {
+    @apply w-full rounded-md border border-white/10 bg-[#050505] px-3 py-2 text-sm text-white/80 placeholder:text-white/20 focus:outline-none focus:ring-1 focus:ring-[#00ff88]/60 focus:border-[#00ff88]/60;
+  }
+
+  .loading-pulse {
+    @apply animate-pulse;
+  }
+}
