@@ -1,9 +1,16 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { pool } from '../db/schema';
 import { authMiddleware, AuthedRequest } from '../middleware/auth';
 import { parseResume } from '../services/aiService';
+import { extractTextFromPdf } from '../utils/pdfExtract';
 
 const router = Router();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+});
 
 router.get('/profile', authMiddleware, async (req: AuthedRequest, res) => {
   const userId = req.user?.id;
@@ -133,6 +140,38 @@ router.post('/parse-resume', authMiddleware, async (req: AuthedRequest, res) => 
     return res.status(500).json({ message: 'Failed to parse resume' });
   }
 });
+
+// Upload PDF resume: extract text and return parsed result + raw text for profile
+router.post(
+  '/parse-resume-pdf',
+  authMiddleware,
+  upload.single('resume'),
+  async (req: AuthedRequest, res) => {
+    if (!req.user?.id) return res.status(401).json({ message: 'Unauthorized' });
+
+    const file = req.file;
+    if (!file?.buffer) {
+      return res.status(400).json({ message: 'No PDF file uploaded. Use field name "resume".' });
+    }
+    if (file.mimetype !== 'application/pdf') {
+      return res.status(400).json({ message: 'Only PDF files are allowed.' });
+    }
+
+    try {
+      const text = await extractTextFromPdf(file.buffer);
+      if (!text || text.length < 50) {
+        return res.status(400).json({
+          message: 'Could not extract enough text from the PDF. Ensure it is a valid, non-image-only resume.',
+        });
+      }
+      const parsed = await parseResume(text.slice(0, 8000));
+      return res.json({ ...parsed, resumeText: text });
+    } catch (err: any) {
+      console.error(err);
+      return res.status(500).json({ message: 'Failed to parse PDF resume' });
+    }
+  },
+);
 
 export default router;
 

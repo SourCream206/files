@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { apiUrl, apiFetch } from '../../lib/api';
 
 interface CompanyResult {
   rank: number;
@@ -51,12 +52,14 @@ export default function CareerFairPage() {
     setUrlMessage(null);
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/career-fair/extract-companies`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
-        body: JSON.stringify({ url: fairUrl.trim() }),
-      });
-      const data = await res.json();
+      const { res, data } = await apiFetch<{ success?: boolean; companies?: string[]; message?: string }>(
+        apiUrl('/api/career-fair/extract-companies'),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
+          body: JSON.stringify({ url: fairUrl.trim() }),
+        }
+      );
       if (data.success && data.companies?.length) {
         setCompanies(data.companies.join('\n'));
         setUrlMessage(data.message || `Found ${data.companies.length} companies.`);
@@ -77,12 +80,14 @@ export default function CareerFairPage() {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
       const companyList = companies.split('\n').map((c) => c.trim()).filter(Boolean);
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/career-fair/analyze`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
-        body: JSON.stringify({ companies: companyList }),
-      });
-      const data = await res.json();
+      const { res, data } = await apiFetch<AnalysisResult & { message?: string }>(
+        apiUrl('/api/career-fair/analyze'),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: token ? `Bearer ${token}` : '' },
+          body: JSON.stringify({ companies: companyList }),
+        }
+      );
       if (!res.ok) throw new Error(data.message || 'Analysis failed');
       setResult(data);
       setActiveTab('strategy');
@@ -99,16 +104,18 @@ export default function CareerFairPage() {
     setFollowUp('');
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/generate-followup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: token ? `Bearer ${token}` : '',
-        },
-        body: JSON.stringify({ company, conversationNotes: followUpInput, type: 'career_fair' }),
-      });
-      const data = await res.json();
-      setFollowUp(data.followUp);
+      const { res, data } = await apiFetch<{ followUp?: string; message?: string }>(
+        apiUrl('/api/generate-followup'),
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: token ? `Bearer ${token}` : '',
+          },
+          body: JSON.stringify({ company, conversationNotes: followUpInput, type: 'career_fair' }),
+        }
+      );
+      setFollowUp(data.followUp ?? '');
     } catch {
       setFollowUp('Failed to generate follow-up. Please try again.');
     } finally {

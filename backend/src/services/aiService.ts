@@ -328,3 +328,84 @@ Return a brief strategic networking plan as plain text, 3-4 actionable sentences
   return completion.choices[0].message.content?.trim() || '';
 }
 
+// ─── Cold Connect: internships + people to connect ──────────────────────────
+
+export interface ColdConnectInternship {
+  title: string;
+  company: string;
+  matchReason: string;
+  searchHint: string;
+}
+
+export interface ColdConnectPerson {
+  role: string;
+  industry: string;
+  whyConnect: string;
+  linkedinSearchHint: string;
+}
+
+export interface ColdConnectResult {
+  internships: ColdConnectInternship[];
+  peopleToConnect: ColdConnectPerson[];
+}
+
+export async function getColdConnectSuggestions(userProfile: UserProfile): Promise<ColdConnectResult> {
+  const profileContext = `
+User: ${userProfile.name}
+University: ${userProfile.university || 'Not specified'}
+Major: ${userProfile.major || 'Not specified'}
+Skills: ${userProfile.skills?.join(', ') || 'Not specified'}
+Target Industries: ${userProfile.targetIndustries?.join(', ') || 'Not specified'}
+Target Companies: ${userProfile.targetCompanies?.join(', ') || 'Not specified'}
+Career Interests: ${userProfile.careerInterests || 'Not specified'}
+`;
+
+  const prompt = `You are a career advisor. Based on this profile, suggest internship opportunities and types of people to connect with on LinkedIn.
+
+${profileContext}
+
+Return a JSON object with this exact structure (no markdown, just JSON):
+{
+  "internships": [
+    {
+      "title": "Software Engineer Intern",
+      "company": "Example Corp",
+      "matchReason": "Brief reason this fits the profile",
+      "searchHint": "Search phrase for job boards (e.g. 'software engineer intern 2025')"
+    }
+  ],
+  "peopleToConnect": [
+    {
+      "role": "Senior Software Engineer",
+      "industry": "Fintech",
+      "whyConnect": "Brief reason to connect",
+      "linkedinSearchHint": "LinkedIn search suggestion (e.g. 'Software Engineer Stripe')"
+    }
+  ]
+}
+
+- internships: 4–6 roles that match skills and interests (use realistic company types; you may use real company names or "companies in [industry]").
+- peopleToConnect: 4–6 types of people (by role/industry) to find on LinkedIn, with a concrete search hint.
+Return only valid JSON.`;
+
+  const completion = await openai.chat.completions.create({
+    model: MODEL,
+    messages: [{ role: 'user', content: prompt }],
+    temperature: 0.6,
+    max_tokens: 1200,
+  });
+
+  const content = completion.choices[0]?.message?.content || '{}';
+  const clean = content.replace(/```json\n?|\n?```/g, '').trim();
+  try {
+    const parsed = JSON.parse(clean);
+    return {
+      internships: Array.isArray(parsed.internships) ? parsed.internships.slice(0, 6) : [],
+      peopleToConnect: Array.isArray(parsed.peopleToConnect) ? parsed.peopleToConnect.slice(0, 6) : [],
+    };
+  } catch (err) {
+    console.error('Failed to parse cold connect AI response', err, content);
+    return { internships: [], peopleToConnect: [] };
+  }
+}
+

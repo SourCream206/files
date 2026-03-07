@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { apiUrl, apiFetch } from '../../lib/api';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,12 +17,14 @@ export default function LoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password }),
-      });
-      const data = await res.json();
+      const { res, data } = await apiFetch<{ token: string; user: unknown; message?: string }>(
+        apiUrl('/api/auth/login'),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
+        }
+      );
       if (!res.ok) throw new Error(data.message || 'Failed to login');
 
       if (typeof window !== 'undefined') {

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { apiUrl, apiFetch } from '../../lib/api';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -50,12 +51,14 @@ export default function SignupPage() {
         targetIndustries: form.targetIndustries || undefined,
       };
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/auth/signup`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const data = await res.json();
+      const { res, data } = await apiFetch<{ token: string; user: unknown; message?: string }>(
+        apiUrl('/api/auth/signup'),
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        }
+      );
       if (!res.ok) throw new Error(data.message || 'Failed to create account');
 
       if (typeof window !== 'undefined') {
