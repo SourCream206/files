@@ -3,8 +3,7 @@
 /page.tsx
 .env
 backend/.env
-frontend/.env.local
-# -----------------
+frontend/.env.local# -----------------
 # ENVIRONMENT FILES
 # -----------------
 .env
