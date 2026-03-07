@@ -1,7 +1,9 @@
 /fair-game.jsx
 /mnt
 /page.tsx
-
+.env
+backend/.env
+frontend/.env.local
 # -----------------
 # ENVIRONMENT FILES
 # -----------------
