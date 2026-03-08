@@ -95,7 +95,7 @@ export default function EventsMap({ events }: { events: MapEvent[] }) {
       // initialized" errors during StrictMode double-mounts or when props
       // change.
       key={events.length}
-      whenCreated={(m) => (mapRef.current = m)}
+      ref={mapRef}        // ← replace whenCreated with this
       center={center}
       zoom={6}
       className="w-full h-full rounded-r-xl [&_.leaflet-container]:bg-[#0a0a0a]"
