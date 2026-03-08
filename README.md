@@ -19,38 +19,6 @@ A full-stack AI-powered platform that transforms networking from random conversa
 
 ---
 
-## Project Structure
-
-```
-fairgame/
-├── frontend/                 # Next.js app
-│   ├── src/app/
-│   │   ├── page.tsx          # Landing page
-│   │   ├── login/            # Login
-│   │   ├── signup/           # Signup (multi-step)
-│   │   ├── dashboard/        # Main dashboard
-│   │   ├── career-fair/      # Career Fair mode
-│   │   ├── networking/       # General Networking mode
-│   │   └── profile/          # Profile editor
-│   └── ...
-│
-└── backend/                  # Express API
-    └── src/
-        ├── index.ts           # Server entry
-        ├── db/schema.ts       # DB schema + connection
-        ├── middleware/auth.ts  # JWT middleware
-        ├── routes/
-        │   ├── auth.ts        # /api/auth/signup, /login
-        │   ├── user.ts        # /api/user/profile
-        │   ├── careerFair.ts  # /api/career-fair/analyze
-        │   ├── networking.ts  # /api/networking/analyze
-        │   └── followUp.ts    # /api/generate-followup
-        └── services/
-            └── aiService.ts   # All OpenAI logic
-```
-
----
-
 ## Quick Start
 
 ### Prerequisites
