@@ -1,16 +1,40 @@
 {
   "name": "fairgame-backend",
   "version": "1.0.0",
+  "description": "Fair Game API server - Production backend for game management and AI integration",
   "main": "dist/index.js",
   "scripts": {
-    "dev": "tsx src/index.ts",
-    "build": "npx tsc",
-    "start": "node dist/index.js"
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "prod": "NODE_ENV=production node dist/index.js",
+    "clean": "rm -rf dist",
+    "rebuild": "npm run clean && npm run build",
+    "type-check": "tsc --noEmit",
+    "prestart": "npm run build",
+    "predev": "npm run type-check",
+    "db:migrate": "node dist/db/migrate.js",
+    "db:seed": "node dist/db/seed.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "gaming",
+    "api",
+    "express",
+    "typescript",
+    "ai",
+    "openai"
+  ],
+  "author": "Your Name/Organization",
   "license": "MIT",
-  "description": "Fair Game API server",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SourCream206/fairgame-backend.git"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
@@ -20,13 +44,25 @@
     "multer": "^1.4.5-lts.1",
     "openai": "^4.104.0",
     "pdf-parse": "^2.4.5",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.1.5",
+    "compression": "^1.7.4"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
     "@types/multer": "^1.4.11",
     "@types/node": "^25.3.5",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.17",
+    "@types/jsonwebtoken": "^9.0.6",
+    "@types/pg": "^8.11.0",
+    "@types/compression": "^1.7.5",
     "tsx": "^4.21.0",
-    "typescript": "^5.9.3"
-  }
+    "typescript": "^5.9.3",
+    "nodemon": "^3.1.0",
+    "ts-node": "^10.9.2"
+  },
+  "private": false,
+  "type": "commonjs"
 }
