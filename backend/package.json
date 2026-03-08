@@ -1,29 +1,13 @@
 {
   "name": "fairgame-backend",
   "version": "1.0.0",
-  "description": "Fair Game API server - Production backend for game management and AI integration",
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
-    "prod": "NODE_ENV=production node dist/index.js",
-    "clean": "rm -rf dist",
-    "rebuild": "npm run clean && npm run build",
-    "type-check": "tsc --noEmit",
-    "prestart": "npm run build",
-    "predev": "npm run type-check"
+    "prod": "NODE_ENV=production node dist/index.js"
   },
-  "keywords": [
-    "gaming",
-    "api",
-    "express",
-    "typescript",
-    "ai",
-    "openai"
-  ],
-  "author": "",
-  "license": "MIT",
   "engines": {
     "node": ">=20.16.0",
     "npm": ">=9.0.0"
@@ -39,8 +23,8 @@
     "pdf-parse": "^2.4.5",
     "pg": "^8.20.0",
     "helmet": "^7.1.0",
-    "express-rate-limit": "^7.1.5",
-    "compression": "^1.7.4"
+    "compression": "^1.7.4",
+    "express-rate-limit": "^7.1.5"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",
